@@ -47,7 +47,7 @@ function feeds_tamper_ui_list_form(&$form_state, $importer) {
     $map[$i]['#tree'] = TRUE;
     $map[$i]['table'] = array();
     // "Add plugin" link.
-    $add = FEEDS_TAMPER_UI_BASE . '/add/' . $importer->id . '/' . $source;
+    $add = FEEDS_TAMPER_UI_BASE . '/add/' . $importer->id . '/' . $i;
     $map[$i]['#add_link'] = l(t('Add plugin'), $add);
 
     // There are no plugins for this source. We've built all we need to.
@@ -259,14 +259,14 @@ function theme_feeds_tamper_ui_list_form($form) {
 }
 
 function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
+  $source = rawurldecode($source);
   // Add css.
   drupal_add_css(drupal_get_path('module', 'feeds_tamper_ui') . '/feeds_tamper_ui.css');
   // Steal Feeds JS for machine_name goodness.
   drupal_add_js(drupal_get_path('module', 'feeds_ui') .'/feeds_ui.js');
   // Workaround some bug unserializing $_SESSION stuff. Most likely related to
   // ajax.
-  // @todo
-  //  Fix this properly.
+  // @todo Fix this properly.
   if (get_class($importer) == '__PHP_Incomplete_Class') {
     foreach ($importer as $key => $value) {
       if ($key == 'id') {
@@ -306,7 +306,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
   $plugin = feeds_tamper_get_plugin($machine_name);
 
   $form['plugin_id'] = array(
-    '#title' => 'The plugin to add',
+    '#title' => t('The plugin to add'),
     '#type' => 'select',
     '#options' => $plugins,
     '#default_value' => $machine_name,
@@ -357,7 +357,7 @@ function feeds_tamper_ui_add_plugin_form(&$form_state, $importer, $source) {
 }
 
 function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
-  if ($_POST['op'] == 'Add') {
+  if ($form_state['clicked_button']['#value'] == t('Add')) {
     $plugin_id = $form_state['values']['plugin_id'];
     $plugin = feeds_tamper_get_plugin($plugin_id);
     if (!empty($plugin['validate']) && isset($form_state['values']['settings'])) {
@@ -376,7 +376,7 @@ function feeds_tamper_ui_add_plugin_form_validate($form, &$form_state) {
 }
 
 function feeds_tamper_ui_add_plugin_form_submit($form, &$form_state) {
-  if ($_POST['op'] == 'Add') {
+  if ($form_state['clicked_button']['#value'] == t('Add')) {
     $obj = feeds_tamper_new_instance();
     $obj->plugin_id = $form_state['values']['plugin_id'];
     if (isset($form_state['values']['settings'])) {

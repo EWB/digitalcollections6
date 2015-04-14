@@ -1,5 +1,4 @@
 <?php
-// $Id: ldapdata.theme.inc,v 1.3 2009/03/18 12:12:02 miglius Exp $
 
 /**
  * @file

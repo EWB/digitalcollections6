@@ -5,7 +5,7 @@
  * The functions in this file are the back end of ThemeKey which should be
  * used only if you configure something but not when ThemeKey switches themes.
  *
- * @author Markus Kalkbrenner | Cocomore AG
+ * @author Markus Kalkbrenner | bio.logis GmbH
  *   @see http://drupal.org/user/124705
  *
  * @author profix898
@@ -130,11 +130,11 @@ function themekey_rebuild() {
  */
 function themekey_scan_modules() {
   $modules = array();
-  $files = file_scan_directory(dirname(__FILE__) . '/modules', '^themekey.[a-z]+.inc$');
+  $files = file_scan_directory(dirname(__FILE__) . '/modules', '^themekey\.[^.]+\.inc$');
   foreach ($files as $file) {
     list( , $module) = explode('.', $file->name);
     if (module_exists($module)) {
-      $modules[] = $file->name;
+      $modules[] = $module;
     }
   }
 

@@ -118,17 +118,17 @@ function path_set_alias($path = NULL, $alias = NULL, $pid = NULL, $language = ''
       // Check if the alias exists already.
       $existing = db_fetch_array(db_query("SELECT pid, src FROM {url_alias} WHERE dst = '%s' AND language = '%s' ORDER BY pid DESC", $alias, $language));
       if (!$existing || ($existing['pid'] == $pid && $existing['src'] != $path)) {
-      db_query("UPDATE {url_alias} SET src = '%s', dst = '%s', language = '%s' WHERE pid = %d", $path, $alias, $language, $pid);
-    }
+        db_query("UPDATE {url_alias} SET src = '%s', dst = '%s', language = '%s' WHERE pid = %d", $path, $alias, $language, $pid);
+      }
       else {
         if ($existing['src'] != $path) {
           watchdog('path', "The alias for path '@path' (language '@lang') was not updated to '@alias', because the path '@expath' already has the same alias.",
             array('@path' => $path, '@lang' => $language, '@alias' => $alias, '@expath' => $existing['src']),
             WATCHDOG_ERROR);
-  }
+        }
         // Don't clear cache if we didn't change anything
         return;
-    }
+      }
     }
   }
   elseif ($path && $alias) {

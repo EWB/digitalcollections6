@@ -1,5 +1,4 @@
 <?php
-// $Id: ldapauth.theme.inc,v 1.2 2009/10/27 14:29:17 miglius Exp $
 
 /**
  * @file
@@ -18,7 +17,7 @@ function theme_ldapauth_admin_list($form) {
   $header = array(
     '',
     t('Server'),
-    array('data' => t('Operations'), 'colspan' => 3),
+    array('data' => t('Operations'), 'colspan' => 4),
     t('Weight'),
   );
 
@@ -30,6 +29,12 @@ function theme_ldapauth_admin_list($form) {
       $row[] = l(t('edit'), 'admin/settings/ldap/ldapauth/edit/'. $sid);
       $row[] = l($element['status']['#value'] ? t('de-activate') : t('activate'), 'admin/settings/ldap/ldapauth/'. ($element['status']['#value'] ? 'deactivate' : 'activate') .'/'. $sid);
       $row[] = l(t('delete'), 'admin/settings/ldap/ldapauth/delete/'. $sid);
+      if ( module_exists('ctools')) {
+        $row[] = l(t('export'), 'admin/settings/ldap/ldapauth/export/'. $sid);
+      }
+      else {
+        $row[] = '&nbsp;';
+      }
       $element['weight']['#attributes']['class'] = "server-weight";
       $row[] = drupal_render($element['weight']);
       $rows[] = array('data' => $row, 'class' => 'draggable'. ($element['status']['#value'] ? ' menu-enabled' : ' menu-disabled'));
@@ -46,4 +51,3 @@ function theme_ldapauth_admin_list($form) {
   $form['list']['table'] = array('#value' => theme('table', $header, $rows, array('id' => 'ldapauth-list-table')));
   return drupal_render($form);
 }
-

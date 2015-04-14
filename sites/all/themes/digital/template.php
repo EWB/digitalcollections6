@@ -129,7 +129,7 @@ function digital_preprocess_page(&$vars, $hook) {
   }
   $vars['primary_links'] = $primary_links;
   //debug($vars['primary_colors']); //debug statement adds the variables to the list of bugs to be printed
-  print_bugs(&$vars); //prints any bug-check variables identified with a debug statement.
+  //print_bugs(&$vars); //prints any bug-check variables identified with a debug statement.
 }
 
 /**

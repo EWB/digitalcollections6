@@ -304,10 +304,10 @@ function _block_rehash($theme = NULL) {
     // This cleanup does not apply to disabled modules, to avoid configuration
     // being lost when modules are disabled.
     if (module_exists($module)) {
-    foreach ($old_module_blocks as $delta => $block) {
-      db_query("DELETE FROM {blocks} WHERE module = '%s' AND delta = '%s' AND theme = '%s'", $module, $delta, $theme);
+      foreach ($old_module_blocks as $delta => $block) {
+        db_query("DELETE FROM {blocks} WHERE module = '%s' AND delta = '%s' AND theme = '%s'", $module, $delta, $theme);
+      }
     }
-  }
   }
   return $blocks;
 }

@@ -1,5 +1,4 @@
 <?php
-// $Id: ldapdata.admin.inc,v 1.9 2009/07/28 14:03:05 miglius Exp $
 
 /**
  * @file
@@ -153,9 +152,11 @@ function ldapdata_admin_edit(&$form_state, $op, $sid) {
     );
     $profile_fields = _ldapdata_retrieve_profile_fields();
     $standard_fields = _ldapdata_retrieve_standard_user_fields();
+    $content_profile_fields = _ldapdata_retrieve_content_profile_fields();
     $drupal_fields = $profile_fields + $standard_fields;
     $form['mapping']['mapping_pre'] = array(
-      '#value' => t('<div class="form-item"><label>Specify mappings below if you selected the second or third option. </label><table><thead><tr><th> Drupal field</th><th>LDAP attribute</th></tr></thead><tbody>'),
+      '#value' => '<div class="form-item"><label>' . t('Specify mappings below if you selected the second or third option.')
+      . ' </label><table><thead><tr><th> ' . t('Drupal field') . '</th><th>' . t('LDAP attribute') . '</th></tr></thead><tbody>',
     );
     $ldap_drupal_reverse_mappings = _ldapdata_reverse_mappings($sid);
     foreach ($drupal_fields as $key => $field) {
@@ -169,6 +170,24 @@ function ldapdata_admin_edit(&$form_state, $op, $sid) {
         '#suffix' => '</td>',
       );
     }
+    // Content profile mapping
+    if ( $content_profile_fields ) {
+      $form['mapping']['mapping_cp'] = array(
+        '#value' => t('<div class="form-item"><label>Specify mappings below if you selected the second or third option. </label><table><thead><tr><th> Content Profile field</th><th>LDAP attribute</th></tr></thead><tbody>'),
+      );
+    }
+    foreach ($content_profile_fields as $key => $field) {
+      $field_tmp = "ldap_amap-". $key;
+      $_prefix = "<tr><td><label for=\"edit[$field_tmp]\">$field</label></td><td>";
+      $form['mapping'][$field_tmp] = array(
+        '#type' => 'textfield',
+        '#default_value' => isset($ldapdata_mappings[$field_tmp]) ? $ldapdata_mappings[$field_tmp] : NULL,
+        '#size' => '20',
+        '#prefix' => $_prefix,
+        '#suffix' => '</td>',
+      );
+    }
+
     $form['mapping']['mapping_post'] = array(
       '#value' => '</tbody></table></div>',
     );
@@ -418,4 +437,3 @@ function _ldapdata_ajax_test($sid) {
   drupal_json($_ldapdata_ldap->connect($binddn, $bindpw) ? array('status' => 1, 'message' => t('Authentication with the LDAP server succeeded.')) : array('status' => 0, 'message' => t('Authentication with the LDAP server failed.')));
   exit;
 }
-

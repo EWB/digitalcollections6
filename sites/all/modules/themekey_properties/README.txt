@@ -3,10 +3,10 @@ ThemeKey Properties
 ===================
 
 Name: themekey_properties
-Authors: Markus Kalkbrenner | Cocomore AG
+Authors: Markus Kalkbrenner | bio.logis GmbH
          Carsten Müller | Cocomore AG
 Drupal: 6.x
-Sponsor: Cocomore AG - http://www.cocomore.com
+Sponsor: bio.logis GmbH - https://www.biologis.com
 
 
 About
@@ -42,7 +42,7 @@ Additional Properties provided by "ThemeKey Properties":
  - system:day_of_week
  - system:dummy
  - user:role
- 
+
 ThemeKey Properties contains an additional module called
 "ThemeKey Properties Debug". This sub module allows you to turn on
 a debug feature that shows the current values of all properties on
@@ -73,28 +73,28 @@ Installation
       directory, or better, your sites/x/modules directory.
 
   2.3 Enable the "ThemeKey Properties" module at /admin/build/modules
-  
+
   2.4 Activate "Show themekey properties values" at
       /admin/settings/themekey/settings/debug
 
 
 Examples
-========                                                              
+========
 
 1. Select a theme for Firefox 3.0.x, but not Firefox 3.5.x
 
   1.1 go to /admin/settings/themekey
 
   1.2 cascade following Theme Switching Rules:
-      
+
       Property: system:user_browser_simplified
       Operator: =
       Value: Mozilla Firefox
-        
+
         Property: system:user_browser
         Operator: >
         Value: Mozilla Firefox 3.0
-          
+
           Property: system:user_browser
           Operator: <
           Value: Mozilla Firefox 3.5
@@ -105,15 +105,15 @@ Examples
   2.1 go to /admin/settings/themekey
 
   2.2 cascade following Theme Switching Rules:
-      
+
       Property: system:user_browser_simplified
       Operator: =
       Value: Internet Explorer
-        
+
         Property: system:user_browser
         Operator: >
         Value: Internet Explorer 6
-          
+
           Property: system:user_browser
           Operator: <
           Value: Internet Explorer 7
@@ -122,24 +122,24 @@ Examples
 3. Select a theme for Christmas 2009
 
   3.1  go to /admin/settings/themekey
-  
+
   3.2 cascade following Theme Switching Rules:
-      
+
       Property: system:date
       Operator: >
       Value: 2009-12-24
-        
+
         Property: system:date
         Operator: <
         Value: 2009-12-27
 
 
 4. Select a theme for New Year 2010
-  
+
   4.1 go to /admin/settings/themekey
-  
+
   4.2 create a Theme Switching Rule:
-      
+
       Property: system:date
       Operator: =
       Value: 2010-01-01
@@ -148,9 +148,9 @@ Examples
 5. Select a theme dedicated for your start page (front page, index page, ...)
 
   5.1 go to /admin/settings/themekey
-  
+
   5.2 create a Theme Switching Rule:
-      
+
       Property: drupal:is_front_page
       Operator: =
       Value: true

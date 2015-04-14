@@ -1,5 +1,4 @@
 <?php
-// $Id: ldapauth.install,v 1.20 2009/10/27 14:29:16 miglius Exp $
 
 /**
  * @file
@@ -14,6 +13,23 @@
  */
 function ldapauth_install() {
   drupal_install_schema('ldapauth');
+  drupal_install_schema('ldapauth_users');
+}
+
+function ldapauth_requirements($phase) {
+
+  $ldap_extension_loaded = extension_loaded('ldap');
+  $t = get_t();
+
+  $requirements = array(
+    'ldapauth' => array(
+      'title' => ($ldap_extension_loaded) ? $t('PHP LDAP extension enabled') : $t('PHP LDAP extension missing or not enabled'),
+      'severity' => ($ldap_extension_loaded) ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    )
+  );
+
+  return $requirements;
+
 }
 
 /**
@@ -21,6 +37,7 @@ function ldapauth_install() {
  */
 function ldapauth_uninstall() {
   // Remove tables.
+  drupal_uninstall_schema('ldapauth_users');
   drupal_uninstall_schema('ldapauth');
 
   // Remove variables
@@ -30,6 +47,8 @@ function ldapauth_uninstall() {
   variable_del('ldapauth_sync_passwords');
   variable_del('ldapauth_disable_pass_change');
   variable_del('ldapauth_alter_email_field');
+  variable_del('ldapauth_create_users');
+  variable_del('ldapauth_alter_username_field');
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -45,8 +64,14 @@ function ldapauth_schema() {
         'type' => 'serial',
         'size' => 'tiny',
         'not null' => TRUE,
+        'no export' => TRUE,  // Do not export db key
       ),
       'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -73,7 +98,7 @@ function ldapauth_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'encrypted' => array(
+      'enc_type' => array(
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
@@ -89,6 +114,15 @@ function ldapauth_schema() {
       'mail_attr' => array(
         'type' => 'varchar',
         'length' => 255,
+      ),
+      'puid_attr' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'binary_puid' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => '0',
       ),
       'binddn' => array(
         'type' => 'varchar',
@@ -113,7 +147,79 @@ function ldapauth_schema() {
       ),
     ),
     'primary key' => array('sid'),
-    'unique keys' => array('name' => array('name')),
+    'unique keys' => array(
+      'name' => array('name'),
+      'machine_name' => array('machine_name'),
+    ),
+// CTools export definitions
+    'export' => array(
+      'key' => 'name',
+      'key name' => 'Server Name',
+      'primary key' => 'sid',
+      'identifier' => 'ldapserver', // Exports will be as $ldapserver
+      'default hook' => 'default_ldapauth_ldapserver',  // Function hook name.
+      'can disable' => FALSE,
+      'api' => array(
+        'owner' => 'ldapauth',
+        'api' => 'default_ldapauth_ldapservers',  // Base name for api include files.
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
+  );
+  if ($GLOBALS['db_type'] == 'pgsql') {
+    $puid_unique_fields = array('puid');
+  }
+  else {
+    $puid_unique_fields = array(array('puid', 255)); // MySQL limit
+  }
+
+  $schema['ldapauth_users'] = array(
+    'description' => 'Stores information about ldap authenticated users.',
+    'fields' => array(
+      'luid' => array(
+        'description' => 'Primary key: ldapauth users id',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => '{users}.uid',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'sid' => array(
+        'description' => '{ldapauth}.sid used for authentication',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => '{ldapauth}.machine_name for cross server id',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'dn' => array(
+        'description' => 'LDAP dn user was authenticated with',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'puid' => array(
+        'description' => 'Persistent and Unique User ID value for this user',
+        'type' => 'text', // Text because dn's can be long
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('luid'),
+    'unique keys' => array(
+      'uid' => array('uid'),
+      'puid_uniq' => $puid_unique_fields,
+    ),
+    'indexes' => array(
+      'puid_idx' => array(array('puid', 255)),  // MySQL limit
+    ),
   );
   return $schema;
 }
@@ -141,15 +247,15 @@ function ldapauth_update_6000() {
 
 function ldapauth_update_6001() {
   $ret = array();
-  db_add_field($ret, 'ldapauth', 'login_php', array(
+  db_add_field($ret, 'ldapauth', 'login_php',  array(
     'type' => 'text',
     'not null' => FALSE,
   ));
-  db_add_field($ret, 'ldapauth', 'filter_php', array(
+  db_add_field($ret, 'ldapauth', 'filter_php',  array(
     'type' => 'text',
     'not null' => FALSE,
   ));
-  db_add_field($ret, 'ldapauth', 'weight', array(
+  db_add_field($ret, 'ldapauth', 'weight',  array(
     'type' => 'int',
     'not null' => TRUE,
     'default' => 0,
@@ -171,6 +277,130 @@ function ldapauth_update_6003() {
   db_change_field($ret, 'ldapauth', 'sid', 'sid', array('type' => 'serial', 'size' => 'tiny', 'not null' => TRUE), array('primary key' => array('sid')));
   db_drop_index($ret, 'ldapauth', 'sid');
   db_add_unique_key($ret, 'ldapauth', 'name', array('name'));
+  return $ret;
+}
+
+function ldapauth_update_6004() {
+  $ret = array();
+  //db_query(" CHANGE COLUMN encrypted enc_type TINYINT NOT NULL DEFAULT 0");
+  db_change_field($ret, 'ldapauth', 'encrypted', 'enc_type',  array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  return $ret;
+}
+// Add the machine_name field and create values for existing rows
+function ldapauth_update_6005() {
+  $ret = array();
+  db_add_field($ret, 'ldapauth', 'machine_name', array(
+    'type' => 'varchar',
+    'length' => 255,
+  ));
+  //Create machine names for existing servers!
+  $mnames = array();
+  $result = db_query('SELECT sid, name from {ldapauth}');
+  while ( $server = db_fetch_object($result)) {
+    $machine_name = drupal_strtolower($server->name);
+    $machine_name = preg_replace('/\s+/', '_', $machine_name);
+    $machine_name = preg_replace('/[^a-z0-9_]/', '', $machine_name);
+    if ( empty($machine_name) ) {
+      $machine_name = "server_" . $server->sid;
+    }
+    for ( $i = 1; isset($mname[$machine_name]); $i++ ) {  // Must be unique
+      $machine_name .= $i;
+    }
+    $mname[$machine_name] = $machine_name;
+    $ret[] = update_sql("UPDATE {ldapauth} SET machine_name = '{$machine_name}' WHERE sid = {$server->sid}");
+  }
+  // in not null after existing rows have a value.
+  db_change_field($ret, 'ldapauth', 'machine_name', 'machine_name', array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+  ));
+  db_add_unique_key($ret, 'ldapauth', 'machine_name', array('machine_name'));
+
+  return $ret;
+}
+// Add the puid_attr field and create ldapauth_users table
+function ldapauth_update_6006() {
+  $ret = array();
+  if ( ! db_column_exists('ldapauth', 'puid_attr')) {
+    db_add_field($ret, 'ldapauth', 'puid_attr', array(
+      'type' => 'varchar',
+      'length' => 255,
+    ));
+  }
+  if ( ! db_column_exists('ldapauth', 'binary_puid')) {
+    db_add_field($ret, 'ldapauth', 'binary_puid', array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => '0',
+    ));
+  }
+
+  // Initial ldapauth_users definition
+  if (db_table_exists('ldapauth_users')) {  // Update being re-run.
+    return $ret;
+  }
+
+  if ($GLOBALS['db_type'] == 'pgsql') {
+    $puid_unique_fields = array('puid');
+  }
+  else {
+    $puid_unique_fields = array(array('puid', 255)); // MySQL limit
+  }
+
+  $table = array(
+    'description' => 'Stores information about ldap authenticated users.',
+    'fields' => array(
+      'luid' => array(
+        'description' => 'Primary key: ldapauth users id',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => '{users}.uid',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'sid' => array(
+        'description' => '{ldapauth}.sid used for authentication',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => '{ldapauth}.machine_name for cross server id',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'dn' => array(
+        'description' => 'LDAP dn user was authenticated with',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'puid' => array(
+        'description' => 'Persistent and Unique User ID value for this user',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('luid'),
+    'unique keys' => array(
+      'uid' => array('uid'),
+      'puid_uniq' => $puid_unique_fields,
+    ),
+    'indexes' => array(
+      'puid_idx' => array(array('puid', 255)),  // MySQL limit
+    ),
+  );
+  db_create_table($ret, 'ldapauth_users', $table);
   return $ret;
 }
 

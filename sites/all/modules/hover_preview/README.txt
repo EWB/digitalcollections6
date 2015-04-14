@@ -1,5 +1,3 @@
-$Id
-
 Hover Preview for ImageCache
 ============================
 
@@ -12,7 +10,7 @@ shopping websites.
 
 The implementation of this module goes a bit further than just a javascript
 hover. The idea is you create multiple imagecache presets, and this will allow
-you to hover from any preset to any other preset. 
+you to hover from any preset to any other preset.
 
 Here's a step-by-step of how to use it.
 
@@ -32,7 +30,7 @@ Hover: Thumbnail TO: BigImage
 Hover: BigImage TO: Hover
 
 The item on the left is the static image size to output, and the item on the
-right is the hover state. 
+right is the hover state.
 
 3) You can also manually output this at the theme layer with a statement
 similar to the following. I am assuming you opened a file such as
@@ -49,4 +47,4 @@ the name of the source imagecache preset, and BigImage is the hover state.
 
 IMPORTANT NOTE: If you have a lot of imagecache presets, you are going to have a huge
 number of formatters. This is due to the fact that the module maps ALL presets
-to ALL other presets. 
+to ALL other presets.

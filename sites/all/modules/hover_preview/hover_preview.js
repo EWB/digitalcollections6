@@ -1,5 +1,4 @@
-
-/*
+/**
  * Hover preview javascript
  *
  * Inspired by http://cssglobe.com/post/1695/easiest-tooltip-and-image-preview-using-jquery
@@ -9,14 +8,14 @@
 
 Drupal.behaviors.HoverPreview = function (context) {
   /* CONFIG */
-    
+
     yOffset = 10;
     xOffset = 30;
     docHeight = $(document).height();
-		//get here because document height could change during DOM manipulation 
+		//get here because document height could change during DOM manipulation
     // these 2 variable determine popup's distance from the cursor
     // you might want to adjust to get the right result
-    
+
   /* END CONFIG */
 
   //determins the length of the title in pixels.
@@ -25,19 +24,19 @@ Drupal.behaviors.HoverPreview = function (context) {
       var ruler = document.getElementById("ruler");
       ruler.innerHTML = this;
 	    return ruler.offsetWidth;
-  }  
+  }
 
   $("img.hover-preview").hover(function(e){
 
     this.t = this.title;
 
-    //this.title = "";  
-    var c = (this.t != "") ? "<br/>" + this.t : "";
+    //this.title = "";
+    var c = (this.t != "") ? "<br/><span class='hover-preview-imagetitle'>" + this.t + "</span>" : "";
     var preview_link = $('#' + this.id + '-url')[0]; //why [0] ?
-    
+
     img_width = $(preview_link).width();
     img_height = $(preview_link).height();
-    
+
     //Output of the preview element
     $("body").append("<span id='ruler'></span><p id='hover-preview'><img src='" + preview_link.src + "' alt='Loading Image Preview' />" + c + "</p>");
     $("#hover-preview")
@@ -45,17 +44,16 @@ Drupal.behaviors.HoverPreview = function (context) {
       .css("left",(e.pageX + xOffset) + "px")
       .fadeIn("fast");
     },
-    
+
   function(){
-   // this.title = this.t;  
+   // this.title = this.t;
     $("#ruler").remove();
     $("#hover-preview").remove();
-    });   
+    });
 
-  
   //keep track of mouse movement in an image and move preview element
   $("img.hover-preview").mousemove(function(e){
-  
+
   var elementHeight = $("p#hover-preview").outerHeight(true);
   var elementWidth = $("p#hover-preview").outerWidth(true);
   var winHeight = $(window).height();
@@ -100,5 +98,5 @@ Drupal.behaviors.HoverPreview = function (context) {
       .css("top",(e.pageY - yOffset) + "px")
       .css("left",(e.pageX + xOffset) + "px");
   }
-  });  
+  });
 };

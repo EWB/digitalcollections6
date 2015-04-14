@@ -2160,8 +2160,8 @@ function _locale_rebuild_js($langcode = NULL) {
 
   $translations = array();
   while ($data = db_fetch_object($result)) {
-        $translations[$data->source] = $data->translation;
-      }
+    $translations[$data->source] = $data->translation;
+  }
 
   // Construct the JavaScript file, if there are translations.
   $data_hash = NULL;
@@ -2597,19 +2597,19 @@ function _locale_batch_build($files, $finished = NULL, $components = array()) {
       // We call _locale_batch_import for every batch operation.
       $operations[] = array('_locale_batch_import', array($file->filename));
     }
-      $batch = array(
-        'operations'    => $operations,
-        'title'         => $t('Importing interface translations'),
-        'init_message'  => $t('Starting import'),
-        'error_message' => $t('Error importing interface translations'),
-        'file'          => './includes/locale.inc',
-        // This is not a batch API construct, but data passed along to the
-        // installer, so we know what did we import already.
-        '#components'   => $components,
-      );
-      if (isset($finished)) {
-        $batch['finished'] = $finished;
-      }
+    $batch = array(
+      'operations'    => $operations,
+      'title'         => $t('Importing interface translations'),
+      'init_message'  => $t('Starting import'),
+      'error_message' => $t('Error importing interface translations'),
+      'file'          => './includes/locale.inc',
+      // This is not a batch API construct, but data passed along to the
+      // installer, so we know what did we import already.
+      '#components'   => $components,
+    );
+    if (isset($finished)) {
+      $batch['finished'] = $finished;
+    }
     return $batch;
   }
   return FALSE;

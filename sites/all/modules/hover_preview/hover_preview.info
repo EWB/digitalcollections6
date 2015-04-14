@@ -1,4 +1,3 @@
-
 name = Imagecache hover preview
 description = A jQuery-based hover preview feature for imagefield/imagecache fields.
 core = 6.x
@@ -7,9 +6,9 @@ dependencies[] = imagecache
 dependencies[] = imagefield
 dependencies[] = content
 
-; Information added by drupal.org packaging script on 2011-02-25
+; Information added by drupal.org packaging script on 2013-09-30
 version = "6.x-1.x-dev"
 core = "6.x"
 project = "hover_preview"
-datestamp = "1298619386"
+datestamp = "1380582107"
 

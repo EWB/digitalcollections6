@@ -15,11 +15,21 @@ $plugin = array(
 
 function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   $form = array();
+  // The CSV parser automagically lowercases all sources.
+  $is_csv = FALSE;
+  if (get_class($importer->parser) == 'FeedsCSVParser') {
+    $is_csv = TRUE;
+  }
   $mappings = $importer->processor->config['mappings'];
   $replace = array();
 
   foreach ($mappings as $mapping) {
-    $replace[] = '[' . $mapping['source'] . ']';
+    if ($is_csv) {
+      $replace[] = '[' . drupal_strtolower($mapping['source']) . ']';
+    }
+    else {
+      $replace[] = '[' . $mapping['source'] . ']';
+    }
   }
 
   $form['text'] = array(
@@ -29,9 +39,7 @@ function feeds_tamper_rewrite_form($importer, $element_key, $settings) {
   );
   $form['help'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Available Replacement Patterns'),
-    '#collapsed' => TRUE,
-    '#collapsible' => TRUE,
+    '#title' => t('Available replacement patterns'),
     '#value' => theme('item_list', $replace),
   );
   return $form;
@@ -41,7 +49,7 @@ function feeds_tamper_rewrite_callback($source, $item_key, $element_key, &$field
   $trans = array();
   $item = $source->batch->items[$item_key];
   foreach ($item as $key => $value) {
-    $trans['[' . $key . ']'] = $value;
+    $trans['[' . $key . ']'] = is_array($value) ? reset($value) : $value;
   }
   $field = strtr($settings['text'], $trans);
 }

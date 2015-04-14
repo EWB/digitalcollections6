@@ -8,7 +8,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '6.31');
+define('VERSION', '6.35');
 
 /**
  * Core API compatibility.
@@ -828,7 +828,7 @@ function system_theme_data() {
   if ($write_database) {
     $filenames = array();
 
-  foreach ($themes as $theme) {
+    foreach ($themes as $theme) {
       // Record the filename of each theme that was found.
       $filenames[] = $theme->filename;
       // Existing themes will always have $theme->status set, since it's a
@@ -843,8 +843,8 @@ function system_theme_data() {
       else {
         $theme->status = ($theme->name == variable_get('theme_default', 'garland'));
         db_query("INSERT INTO {system} (name, owner, info, type, filename, status, throttle, bootstrap) VALUES ('%s', '%s', '%s', '%s', '%s', %d, %d, %d)", $theme->name, $theme->owner, serialize($theme->info), 'theme', $theme->filename, $theme->status, 0, 0);
+      }
     }
-  }
     // Delete from the system table any themes missing from the file system.
     if ($filenames) {
       db_query("DELETE FROM {system} WHERE type = 'theme' AND filename NOT IN (". db_placeholders($filenames, 'varchar') .")", $filenames);

@@ -1,5 +1,4 @@
 <?php
-// $Id: LDAPInterface.inc,v 1.6 2009/10/27 14:29:18 miglius Exp $
 
 /**
  * @file
@@ -38,6 +37,9 @@ class LDAPInterface {
       case 'name':
         $this->name = $value;
         break;
+      case 'machine_name':
+        $this->machine_name = $value;
+        break;
       case 'server':
         $this->server = $value;
         break;
@@ -47,8 +49,8 @@ class LDAPInterface {
       case 'tls':
         $this->tls = $value;
         break;
-      case 'encrypted':
-        $this->encrypted = $value;
+      case 'enc_type':
+        $this->enc_type = $value;
         break;
       case 'user_attr':
         $this->user_attr = $value;
@@ -61,6 +63,12 @@ class LDAPInterface {
         break;
       case 'mail_attr':
         $this->mail_attr = $value;
+        break;
+      case 'puid_attr':
+        $this->puid_attr = $value;
+        break;
+      case 'binary_puid':
+        $this->binary_puid = $value;
         break;
       case 'binddn':
         $this->binddn = $value;
@@ -84,14 +92,17 @@ class LDAPInterface {
       case 'name':
         $ret = $this->name;
         break;
+      case 'machine_name':
+        $ret = $this->machine_name;
+        break;
       case 'port':
         $ret = $this->port;
         break;
       case 'tls':
         $ret = $this->tls;
         break;
-      case 'encrypted':
-        $ret = $this->encrypted;
+      case 'enc_type':
+        $ret = $this->enc_type;
         break;
       case 'user_attr':
         $ret = isset($this->user_attr) ? $this->user_attr : NULL;
@@ -104,6 +115,12 @@ class LDAPInterface {
         break;
       case 'mail_attr':
         $ret = isset($this->mail_attr) ? $this->mail_attr : NULL;
+        break;
+      case 'puid_attr':
+        $ret = isset($this->puid_attr) ? $this->puid_attr : NULL;
+        break;
+      case 'binary_puid':
+        $ret = isset($this->binary_puid) ? $this->binary_puid : NULL;
         break;
       case 'binddn':
         $ret = isset($this->binddn) ? $this->binddn : NULL;
@@ -129,16 +146,16 @@ class LDAPInterface {
   }
 
   function initConnection() {
-    if (!$con = ldap_connect($this->server, $this->port)) {
+    if (!$this->connection = ldap_connect($this->server, $this->port)) {
       watchdog('ldap', 'LDAP Connect failure to @server:@port', array('@server' => $this->server, '@port' => $this->port), WATCHDOG_ERROR);
       return;
     }
 
-    ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3);
-    ldap_set_option($con, LDAP_OPT_REFERRALS, 0);
+    ldap_set_option($this->connection, LDAP_OPT_PROTOCOL_VERSION, 3);
+    ldap_set_option($this->connection, LDAP_OPT_REFERRALS, 0);
     // TLS encryption contributed by sfrancis@drupal.org
     if ($this->tls) {
-      ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
+      ldap_get_option($this->connection, LDAP_OPT_PROTOCOL_VERSION, $vers);
       if ($vers == -1) {
         watchdog('ldap', 'Could not get LDAP protocol version.', array(), WATCHDOG_ERROR);
         return;
@@ -147,28 +164,32 @@ class LDAPInterface {
         watchdog('ldap', 'Could not start TLS, only supported by LDAP v3.', array(), WATCHDOG_ERROR);
         return;
       }
-      else if (!function_exists('ldap_start_tls')) {
+      elseif (!function_exists('ldap_start_tls')) {
         watchdog('ldap', 'Could not start TLS. It does not seem to be supported by this PHP setup.', array(), WATCHDOG_ERROR);
         return;
       }
-      else if (!ldap_start_tls($con)) {
-        watchdog('ldap', 'Could not start TLS. (Error %errno: %error).', array('%errno' => ldap_errno($con), '%error' => ldap_error($con)), WATCHDOG_ERROR);
+      elseif (!ldap_start_tls($this->connection)) {
+        watchdog('ldap', 'Could not start TLS. (Error %errno: %error).', array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)), WATCHDOG_ERROR);
         return;
       }
     }
-    $this->connection = $con;
   }
 
   function connectAndBind($dn = '', $pass = '') {
     $this->initConnection();
 
-    $con = $this->connection;
-    if (!$this->bind($dn, $pass)) {
-      watchdog('ldap', 'LDAP Bind failure for user %user. Error %errno: %error', array('%user' => $dn, '%errno' => ldap_errno($con), '%error' => ldap_error($con)));
-      return NULL;
+    if ($this->connection) {
+      if (!$this->bind($dn, $pass)) {
+        watchdog('ldap', 'LDAP Bind failure for user %user. Error %errno: %error', array('%user' => $dn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+        return NULL;
+      }
+      return $this->connection;
+    }
+    else {
+      return $false;
     }
 
-    return $con;
+
   }
 
   function bind($dn, $pass) {
@@ -204,13 +225,20 @@ class LDAPInterface {
     }
     return $ret;
   }
-
-  // WARNING! WARNING! WARNING!
-  // This function returns its entries with lowercase attribute names.
-  // Don't blame me, blame PHP's own ldap_get_entries()
-  function retrieveAttributes($dn) {
+/**
+ * Retrieve all or some of the attributes for the ldap dn.
+ *
+ * WARNING! WARNING! WARNING!
+ * This function returns its entries with lowercase attribute names.
+ * Don't blame me, blame PHP's own ldap_get_entries()
+ *
+ * @param String $dn Required - The full dn to the object
+ * @param Array  $attributes Optional - an array of specific attributes to
+ *               retrieve.  See ldap_read.
+ */
+  function retrieveAttributes($dn, $attributes = array()) {
     set_error_handler(array('LDAPInterface', 'void_error_handler'));
-    $result = ldap_read($this->connection, $dn, 'objectClass=*');
+    $result = ldap_read($this->connection, $dn, 'objectClass=*', $attributes );
     $entries = ldap_get_entries($this->connection, $result);
     restore_error_handler();
 
@@ -218,7 +246,7 @@ class LDAPInterface {
   }
 
   function retrieveAttribute($dn, $attrname) {
-    $entries = $this->retrieveAttributes($dn);
+    $entries = $this->retrieveAttributes($dn, array($attrname));
     return isset($entries[strtolower($attrname)]) ? $entries[strtolower($attrname)][0] : NULL;
   }
 
@@ -245,6 +273,12 @@ class LDAPInterface {
           ldap_mod_del($this->connection, $dn, array($key => $old_value));
         }
       }
+      //Encodes password for use in Active Directory // http://drupal.org/node/339821
+      if ($key == "unicodePwd") {
+        $cur_val = "\"" . $cur_val . "\"";
+        $attributes[$key] = mb_convert_encoding($cur_val, "UTF-16LE");
+      }
+
       if (is_array ($cur_val)) {
         foreach ($cur_val as $mv_key => $mv_cur_val) {
           if ($mv_cur_val == '') {
@@ -256,7 +290,6 @@ class LDAPInterface {
         }
       }
     }
-
     return ldap_modify($this->connection, $dn, $attributes);
   }
 

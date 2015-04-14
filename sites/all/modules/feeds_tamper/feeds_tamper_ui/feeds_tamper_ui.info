@@ -5,9 +5,9 @@ dependencies[] = feeds_tamper
 dependencies[] = feeds_ui
 core = 6.x
 
-; Information added by drupal.org packaging script on 2011-07-31
-version = "6.x-1.0-beta4"
+; Information added by Drupal.org packaging script on 2014-07-14
+version = "6.x-1.0"
 core = "6.x"
 project = "feeds_tamper"
-datestamp = "1312099617"
+datestamp = "1405301629"
 
