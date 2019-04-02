@@ -1,6 +1,6 @@
 
   ; The name and description of the theme used on the admin/build/themes page.
-name        = ADKpoetry
+name        = Clarkson
 description = A Zen sub-theme.
 
   ; The screenshot used on the admin/build/themes page.
@@ -28,7 +28,7 @@ stylesheets[all][]   = html-elements.css
 ; stylesheets[all][] = messages.css
 ; stylesheets[all][] = block-editing.css
 ; stylesheets[all][] = wireframes.css
-stylesheets[all][]   = adkpoetry.css
+stylesheets[all][]   = clarkson.css
 stylesheets[print][] = print.css
   ; To prevent stylesheets of a base theme or of a module from being included in
   ; our sub-theme, we specify it in our .info file (and we don't need to have a
